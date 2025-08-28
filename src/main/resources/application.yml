@@ -5,7 +5,7 @@ server:
 
 spring:
   application:
-    name: ${SERVICE_NAME:backend-template-service}
+    name: ${SERVICE_NAME:content-service}
   
   datasource:
     url: jdbc:postgresql://localhost:5432/${DB_NAME:ahamo_dummy_demo2}

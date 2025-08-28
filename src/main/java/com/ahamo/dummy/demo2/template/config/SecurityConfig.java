@@ -1,4 +1,4 @@
-package com.ahamo.dummy.demo2.template.config;
+package com.ahamo.dummy.demo2.content.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -15,8 +15,11 @@ public class SecurityConfig {
         http
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/v1/health/**").permitAll()
+                .requestMatchers("/health/**").permitAll()
                 .requestMatchers("/actuator/**").permitAll()
+                .requestMatchers("/campaigns/**").permitAll()
+                .requestMatchers("/news/**").permitAll()
+                .requestMatchers("/contact/**").permitAll()
                 .anyRequest().authenticated()
             );
             
