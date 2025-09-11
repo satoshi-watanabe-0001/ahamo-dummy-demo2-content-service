@@ -20,6 +20,7 @@ public class SecurityConfig {
                 .requestMatchers("/campaigns/**").permitAll()
                 .requestMatchers("/news/**").permitAll()
                 .requestMatchers("/contact/**").permitAll()
+                .requestMatchers("/faq/**").permitAll()
                 .anyRequest().authenticated()
             );
             
