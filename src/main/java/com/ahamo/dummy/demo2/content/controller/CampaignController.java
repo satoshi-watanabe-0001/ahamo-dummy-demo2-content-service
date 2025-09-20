@@ -2,6 +2,7 @@ package com.ahamo.dummy.demo2.content.controller;
 
 import com.ahamo.dummy.demo2.content.service.CampaignService;
 import com.ahamo.dummy.demo2.content.dto.CampaignResponse;
+import com.ahamo.dummy.demo2.content.dto.CampaignValidityResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -52,6 +53,21 @@ public class CampaignController {
             return ResponseEntity.ok(campaign);
         } catch (NumberFormatException e) {
             log.warn("無効なキャンペーンID: {}", id);
+            return ResponseEntity.badRequest().build();
+        }
+    }
+    
+    @GetMapping("/{id}/validity")
+    public ResponseEntity<CampaignValidityResponse> checkCampaignValidity(@PathVariable String id) {
+        log.info("キャンペーン有効性チェックAPI呼び出し: id={}", id);
+        
+        try {
+            Long campaignId = Long.parseLong(id);
+            CampaignValidityResponse validity = campaignService.checkCampaignValidity(campaignId);
+            
+            return ResponseEntity.ok(validity);
+        } catch (NumberFormatException e) {
+            log.warn("無効なキャンペーンID形式: {}", id);
             return ResponseEntity.badRequest().build();
         }
     }
