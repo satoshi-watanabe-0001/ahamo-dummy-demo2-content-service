@@ -2,6 +2,7 @@ package com.ahamo.dummy.demo2.content.controller;
 
 import com.ahamo.dummy.demo2.content.config.SecurityConfig;
 import com.ahamo.dummy.demo2.content.dto.CampaignResponse;
+import com.ahamo.dummy.demo2.content.dto.CampaignValidityResponse;
 import com.ahamo.dummy.demo2.content.service.CampaignService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
@@ -22,6 +23,7 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.http.MediaType.APPLICATION_JSON;
 
 @WebMvcTest(CampaignController.class)
 @Import(SecurityConfig.class)
@@ -155,5 +157,100 @@ class CampaignControllerTest {
                 .andExpect(jsonPath("$.total").value(25))
                 .andExpect(jsonPath("$.page").value(2))
                 .andExpect(jsonPath("$.limit").value(5));
+    }
+
+    @Test
+    void checkCampaignValidity_ValidId_ShouldReturnValidityResponse() throws Exception {
+        CampaignValidityResponse validityResponse = new CampaignValidityResponse(
+            "1",
+            "テストキャンペーン",
+            true,
+            "VALID",
+            LocalDateTime.now().minusDays(1),
+            LocalDateTime.now().plusDays(30),
+            "キャンペーンは有効です"
+        );
+        when(campaignService.checkCampaignValidity(1L)).thenReturn(validityResponse);
+
+        mockMvc.perform(get("/campaigns/1/validity"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(APPLICATION_JSON))
+                .andExpect(jsonPath("$.campaignId").value("1"))
+                .andExpect(jsonPath("$.title").value("テストキャンペーン"))
+                .andExpect(jsonPath("$.isValid").value(true))
+                .andExpect(jsonPath("$.validityStatus").value("VALID"))
+                .andExpect(jsonPath("$.reason").value("キャンペーンは有効です"));
+    }
+
+    @Test
+    void checkCampaignValidity_ExpiredCampaign_ShouldReturnInvalidResponse() throws Exception {
+        CampaignValidityResponse validityResponse = new CampaignValidityResponse(
+            "1",
+            "期限切れキャンペーン",
+            false,
+            "EXPIRED",
+            LocalDateTime.now().minusDays(30),
+            LocalDateTime.now().minusDays(1),
+            "キャンペーンが終了しています"
+        );
+        when(campaignService.checkCampaignValidity(1L)).thenReturn(validityResponse);
+
+        mockMvc.perform(get("/campaigns/1/validity"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(APPLICATION_JSON))
+                .andExpect(jsonPath("$.campaignId").value("1"))
+                .andExpect(jsonPath("$.isValid").value(false))
+                .andExpect(jsonPath("$.validityStatus").value("EXPIRED"))
+                .andExpect(jsonPath("$.reason").value("キャンペーンが終了しています"));
+    }
+
+    @Test
+    void checkCampaignValidity_NotStartedCampaign_ShouldReturnInvalidResponse() throws Exception {
+        CampaignValidityResponse validityResponse = new CampaignValidityResponse(
+            "1",
+            "未開始キャンペーン",
+            false,
+            "NOT_STARTED",
+            LocalDateTime.now().plusDays(1),
+            LocalDateTime.now().plusDays(30),
+            "キャンペーン開始前です"
+        );
+        when(campaignService.checkCampaignValidity(1L)).thenReturn(validityResponse);
+
+        mockMvc.perform(get("/campaigns/1/validity"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(APPLICATION_JSON))
+                .andExpect(jsonPath("$.campaignId").value("1"))
+                .andExpect(jsonPath("$.isValid").value(false))
+                .andExpect(jsonPath("$.validityStatus").value("NOT_STARTED"))
+                .andExpect(jsonPath("$.reason").value("キャンペーン開始前です"));
+    }
+
+    @Test
+    void checkCampaignValidity_InactiveCampaign_ShouldReturnInvalidResponse() throws Exception {
+        CampaignValidityResponse validityResponse = new CampaignValidityResponse(
+            "1",
+            "無効キャンペーン",
+            false,
+            "INACTIVE",
+            LocalDateTime.now().minusDays(1),
+            LocalDateTime.now().plusDays(30),
+            "キャンペーンが無効化されています"
+        );
+        when(campaignService.checkCampaignValidity(1L)).thenReturn(validityResponse);
+
+        mockMvc.perform(get("/campaigns/1/validity"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(APPLICATION_JSON))
+                .andExpect(jsonPath("$.campaignId").value("1"))
+                .andExpect(jsonPath("$.isValid").value(false))
+                .andExpect(jsonPath("$.validityStatus").value("INACTIVE"))
+                .andExpect(jsonPath("$.reason").value("キャンペーンが無効化されています"));
+    }
+
+    @Test
+    void checkCampaignValidity_InvalidIdFormat_ShouldReturn400() throws Exception {
+        mockMvc.perform(get("/campaigns/invalid/validity"))
+                .andExpect(status().isBadRequest());
     }
 }

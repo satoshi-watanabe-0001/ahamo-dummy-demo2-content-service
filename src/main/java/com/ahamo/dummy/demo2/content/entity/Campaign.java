@@ -39,6 +39,12 @@ public class Campaign {
     @Column(name = "is_active")
     private Boolean isActive = true;
     
+    @Column(name = "valid_from")
+    private LocalDateTime validFrom;
+    
+    @Column(name = "valid_until")
+    private LocalDateTime validUntil;
+    
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
